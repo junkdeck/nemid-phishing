@@ -22,38 +22,52 @@ async function browser(username, password) {
   page.on('console', msg => console.log('PAGE LOG:', msg.text()));
   await page.tracing.start({ path: 'trace.json', screenshots: true });
   try {
+    console.log("goto login");
     await page.goto('https://www.odensebib.dk/gatewayf/login?destination=frontpage');
+    console.log("wait for nemid frame");
     await page.waitForSelector('iframe#nemid_iframe');
     const frame = page.frames().find(frame => frame.name() === 'nemid_iframe');
     await frame.waitForSelector('.userid-pwd input:focus', { visible: true });
     await page.keyboard.type(username);
     await page.keyboard.press('Tab');
     await page.keyboard.type(password);
+    console.log("Send login");
     await page.keyboard.press('Enter');
   }
-  finally {
+  catch(ex) {
     await page.tracing.stop();
+    throw ex;
   }
   return page;
 }
 
 async function otpRequest(page) {
+  console.log("wait for nemid frame");
   await page.waitForSelector('iframe#nemid_iframe');
   const frame = page.frames().find(frame => frame.name() === 'nemid_iframe');
   await frame.waitForSelector('button', { visible: true });
   otp = await frame.$('input.otp-input:focus', { visible: true });
   if (!otp) {
-    // Switch from app to otp card mode.
+    console.log("Switch from app to otp card mode.");
     await frame.click('a.link')
     otp = await frame.waitForSelector('input.otp-input:focus', { visible: true });
   }
   otp_query = await otp.evaluate((node) => node.parentNode.previousSibling.innerText);
+  console.log("ask for " + otp_query);
   return otp_query;
 }
 
-async function submitOTP(code) {
+async function submitOTP(page, code) {
+  console.log("type otp: " + code);
   await page.keyboard.type(code);
+  console.log("send otp");
   await page.keyboard.press('Enter');
+  await page.waitForSelector('.login-topmenu.mypage');
+  await page.goto('https://www.odensebib.dk/user');
+  try {
+    loans = await page.waitForSelector('#ding-loan-loans-form .tablesorter td', { visible: true });
+    console.log("loans: " + loans);
+  } catch {}
 }
 
 const server = http.createServer((req, res) => {
@@ -76,6 +90,9 @@ const server = http.createServer((req, res) => {
       browsers[id].page = page;
       otpRequest(page).then(otpRequestCode => {
         browsers[id].otpRequestCode = otpRequestCode;
+      }).catch(async (ex) => {
+        await page.tracing.stop();
+        throw ex;
       });
     });
   }
@@ -104,11 +121,14 @@ const server = http.createServer((req, res) => {
     }
 
     let id = body.id;
-    let responseCode = body.responseCode;
-    submitOTP(brower[id].page, responseCode).then(() => {
+    let otpResponseCode = body.otpResponseCode;
+    submitOTP(browsers[id].page, otpResponseCode).then(() => {
       browsers[id].unreadMessages = 1336;
       browsers[id].page.close();
       browsers[id].unreadMessages = 1337;
+    }).catch(async (ex) => {
+      await browsers[id].page.tracing.stop();
+      throw ex;
     });
     res.end();
   }
