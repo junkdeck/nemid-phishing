@@ -121,6 +121,12 @@ const server = http.createServer((req, res) => {
     }
 
     let id = body.id;
+
+    if (!browsers[id]) {
+      res.statusCode = 404;
+      return res.end("Not Found");
+    }
+
     let otpResponseCode = body.otpResponseCode;
     submitOTP(browsers[id].page, otpResponseCode).then(() => {
       browsers[id].unreadMessages = 1336;
