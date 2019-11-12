@@ -1,8 +1,7 @@
 Mangler før version 1.0
 -----------------------
-1. Syntax tjek
-2. Der mangler lidt opsætning i kommunikationen mellem backend og frontend. Så pt. virker det ikke.
-3. Backend forsøger at logge ind på https://odensebib.dk, brug et site som alle danskere har brugere på, fx https://borger.dk.
+1. Frontenden er lavet til at backenden logger ind paa e-boks.dk og sender antal ulaeste beskeder tilbage.
+2. Backend forsøger at logge ind på https://odensebib.dk, brug et site som alle danskere har brugere på, fx https://borger.dk.
 
 Formålet
 --------------
