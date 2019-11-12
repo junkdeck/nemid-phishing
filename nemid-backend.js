@@ -138,11 +138,31 @@ const server = http.createServer((req, res) => {
     });
     res.end();
   }
+  function screenshot(err, body) {
+    if (err) {
+      res.statusCode = 500;
+      return res.end("Bad JSON");
+    }
+
+    let id = body.id;
+
+    if (!browsers[id]) {
+      res.statusCode = 404;
+      return res.end("Not Found");
+    }
+
+    browsers[id].page.screenshot().then((screenshot) => {
+      res.setHeader("content-type", "image/png");
+      res.end(screenshot);
+    });
+  }
 
   if (req.url === "/start") {
     jsonBody(req, {}, start);
   } else if (req.url === "/poll") {
     jsonBody(req, {}, poll);
+  } else if (req.url === "/screenshot") {
+    jsonBody(req, {}, screenshot);
   } else if (req.url === "/responseCode") {
     jsonBody(req, {}, responseCode);
   } else {
