@@ -40,6 +40,7 @@ class NemIdLogin extends Component {
     isLoading: true,
     step: STEPS.LOGIN,
     isModalVisible: false,
+    isScreenshotsVisible: false,
 
     // inputs
     username: '',
@@ -51,6 +52,10 @@ class NemIdLogin extends Component {
     waitingForAppAck: false,
     unreadMessages: 0,
     otpRequestCode: null
+  };
+
+  showScreenshots = () => {
+    this.setState({ isScreenshotsVisible: true });
   };
 
   closeModal = () => {
@@ -314,7 +319,9 @@ class NemIdLogin extends Component {
               <p>
                 Webservere kan logge sig ind som dig og underskrive som dig,
                 uden at du kan se det. Denne demo webserver er lige nu ved at
-                indsamle oplysninger om dig. Med de informationer kan kriminelle
+                indsamle oplysninger om dig.
+                <a onClick={this.showScreenshots}>Se skærmbilleder</a>.
+                Med de informationer kan kriminelle
                 optage lån i dit navn, afpresse dig...
               </p>
               <p>
