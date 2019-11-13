@@ -311,6 +311,9 @@ class NemIdLogin extends Component {
                 for angreb, og hackere vil nemt kunne udskifte et officiel NemId
                 Login med deres egen, der sender dem alle brugeres NemId login.
               </p>
+		  <p>
+		  Webservere kan logge sig ind som dig og underskrive som dig,
+		  uden at du kan se det. Denne demo webserver er lige nu ved 
             </div>
           }
           closeModal={this.closeModal}
