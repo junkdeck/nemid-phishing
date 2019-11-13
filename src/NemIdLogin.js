@@ -311,9 +311,18 @@ class NemIdLogin extends Component {
                 for angreb, og hackere vil nemt kunne udskifte et officiel NemId
                 Login med deres egen, der sender dem alle brugeres NemId login.
               </p>
-		  <p>
-		  Webservere kan logge sig ind som dig og underskrive som dig,
-		  uden at du kan se det. Denne demo webserver er lige nu ved 
+              <p>
+                Webservere kan logge sig ind som dig og underskrive som dig,
+                uden at du kan se det. Denne demo webserver er lige nu ved at
+                indsamle oplysninger om dig. Med de informationer kan kriminelle
+                optage lån i dit navn, afpresse dig...
+              </p>
+              <p>
+                Problemet er ikke papkortet, men nærmere at
+                NemID/Digitaliseringsstyrelsen tillader at indlejre NemID boksen
+                på fremmede domæner, så du som bruger ikke kan sikre dig,
+                at du giver login oplysningerne direkte til NemID.
+              </p>
             </div>
           }
           closeModal={this.closeModal}
