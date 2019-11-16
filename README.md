@@ -1,12 +1,8 @@
-Mangler før version 1.0
------------------------
-1. Frontenden er lavet til at backenden logger ind paa e-boks.dk og sender antal ulaeste beskeder tilbage.
-2. Backend forsøger at logge ind på https://odensebib.dk, brug et site som alle danskere har brugere på, fx https://borger.dk.
-
 Formålet
 --------------
 Digitaliseringsstyrelsen skal erkende at det er nødvendigt for sikkerheden, at de ændrer arkitekturen for NemID/MitID.
-Det bliver gjort ved at gøre det nemt for enhver at lave et NemID phishing site.
+Der er adskillige gange gjort opmærksom på problemet uden at styrelsen har lukket hullet.
+For at presse styrelsen til at reagere og beskytte os alle, gør koden her det nemt for enhver at lave et NemID phishing site.
 
 Hvordan
 -------------
