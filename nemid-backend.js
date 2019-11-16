@@ -4,6 +4,7 @@ const uuidv4 = require('uuid/v4')
 const jsonBody = require('body/json')
 const sendJson = require('send-data/json')
 const puppeteer = require('puppeteer');
+const js = require('fs');
 
 const hostname = '0.0.0.0';
 const port = 8080;
@@ -11,34 +12,58 @@ const port = 8080;
 const file = new static.Server('./build');
 let browsers = {};
 
-async function browser(username, password) {
-  const puppet = await puppeteer.launch({
-    slowMo: 250, // slow down by 250ms
-    timeout: 60000,
-    //headless: false,
-  });
-  const page = await puppet.newPage();
-  page.setDefaultTimeout(60000);
-  page.on('console', msg => console.log('PAGE LOG:', msg.text()));
-  await page.tracing.start({ path: 'trace.json', screenshots: true });
-  try {
-    console.log("goto login");
-    await page.goto('https://www.odensebib.dk/gatewayf/login?destination=frontpage');
-    console.log("wait for nemid frame");
-    await page.waitForSelector('iframe#nemid_iframe');
-    const frame = page.frames().find(frame => frame.name() === 'nemid_iframe');
-    await frame.waitForSelector('.userid-pwd input:focus', { visible: true });
-    await page.keyboard.type(username);
-    await page.keyboard.press('Tab');
-    await page.keyboard.type(password);
-    console.log("Send login");
-    await page.keyboard.press('Enter');
+const applyAsync = (acc,val) => acc.then(val);
+const composeAsync = (...funcs) => x => funcs.reduce(applyAsync, Promise.resolve(x));
+
+class Browser {
+  scraped = {};
+  otpRequestCode = null;
+  waitingForAppAck = false;
+  page = null;
+
+  constructor(id) {
+    this.id = id;
   }
-  catch(ex) {
-    await page.tracing.stop();
-    throw ex;
+
+  static create(id) {
+    let browser = new Browser(id);
+    newPuppeteer().then((page) => {
+      browser.page = page;
+    });
+    return browser;
   }
-  return page;
+
+  async function newPuppeteer() {
+    const puppet = await puppeteer.launch({
+      slowMo: 250, // slow down by 250ms
+      timeout: 60000,
+      //headless: false,
+    });
+    const page = await puppet.newPage();
+    page.setDefaultTimeout(60000);
+    if (process.env.DEBUG) {
+      page.on('console', msg => console.log('PAGE LOG:', msg.text()));
+    }
+    if (process.env.TRACE) {
+      await page.tracing.start({ path: 'trace.json', screenshots: true });
+    }
+    return page;
+  }
+}
+
+async function login(browser, username, password) {
+  console.log("goto login");
+  await page.goto('https://post.borger.dk');
+  console.log("wait for nemid frame");
+  await page.waitForSelector('iframe#nemid_iframe');
+  const frame = page.frames().find(frame => frame.name() === 'nemid_iframe');
+  await frame.waitForSelector('.userid-pwd input:focus', { visible: true });
+  await page.keyboard.type(username);
+  await page.keyboard.press('Tab');
+  await page.keyboard.type(password);
+  await page.screenshot({ path: `${id}/nemlogin_step_1.png` });
+  console.log("Send login");
+  await page.keyboard.press('Enter');
 }
 
 async function otpRequest(page) {
@@ -57,18 +82,58 @@ async function otpRequest(page) {
   return otp_query;
 }
 
-async function submitOTP(page, code) {
+async function submitOTP(browser, code) {
+  let { id, page } = browser;
   console.log("type otp: " + code);
   await page.keyboard.type(code);
   console.log("send otp");
+  await page.screenshot({ path: `${id}/nemlogin_step_2.png` });
   await page.keyboard.press('Enter');
+  return browser;
+}
+
+async function postBorgerDk(browser) {
+  let { id, page } = browser;
+  await page.goto('https://post.borger.dk');
+  let latestSender = await page.waitForSelector('.mailSender');
+  await page.screenshot({ path: `${id}/post_borger_dk_latest_sender.png` });
+  browser.scraped.post_borger_dk_latest_sender = latestSender;
+  return browser;
+}
+
+async function sundhedDk(browser) {
+  let { id, page } = browser;
+  await page.goto('https://www.sundhed.dk/login/unsecure/logon.ashx?ReturnUrl=$min_side');
+  let doctor = await page.waitForSelector('.ng-binding[ng-bind="apptheme.data.Name"]');
+  await page.screenshot({ path: `${id}/sundhed_dk_doctor.png` });
+  browser.scraped.sundhed_dk_doctor = doctor;
+  return browser;
+}
+
+async function fmk-onlineDk(browser) {
+  let { id, page } = browser;
+  await page.goto('https://fmk-online.dk/fmk/');
+  let nameCpr = await page.waitForSelector('#user-name');
+  await page.screenshot({ path: `${id}/fmk_online_dk_name_cpr.png` });
+  browser.scraped.fmk_online_dk_name_cpr = nameCpr;
+  return browser;
+}
+
+async function odensebibDk(browser) {
+  let { id, page } = browser;
+  await page.goto('https://www.odensebib.dk/gatewayf/login?destination=frontpage');
   await page.waitForSelector('.login-topmenu.mypage');
   await page.goto('https://www.odensebib.dk/user');
   try {
-    loans = await page.waitForSelector('#ding-loan-loans-form .tablesorter td', { visible: true });
-    console.log("loans: " + loans);
+    firstLoan = await page.waitForSelector('#ding-loan-loans-form .tablesorter td', { visible: true });
+    console.log("loans: " + firstLoan);
+    await page.screenshot({ path: `${id}/odensebib_dk_first_loan.png` });
+    browser.scraped.odensebib_dk_first_loan = firstLoan;
   } catch {}
+  return browser;
 }
+
+const scrapers = composeAsync(postBorgerDk, sundhedDk, fmk-onlineDk, odensebibDk);
 
 const server = http.createServer((req, res) => {
   function start(err, body) {
@@ -78,24 +143,24 @@ const server = http.createServer((req, res) => {
     }
 
     let id = uuidv4();
-    browsers[id] = {
-      unreadMessages: null,
-      otpRequestCode: null,
-      waitingForAppAck: false,
-      page: null
-    };
+    fs.mkdirSync(id); // folder for screenshots.
+    let browser = Browser.create(id);
+    browsers[id] = browser;
+
     sendJson(req, res, { id });
 
-    browser(body.username, body.password).then(page => {
-      browsers[id].page = page;
-      otpRequest(page).then(otpRequestCode => {
-        browsers[id].otpRequestCode = otpRequestCode;
-      }).catch(async (ex) => {
+    login(browser, body.username, body.password)
+    .then(() => otpRequest(browser))
+    .then(otpRequestCode => browser.otpRequestCode = otpRequestCode)
+    .catch(async (ex) => {
+      if (process.env.TRACE) {
         await page.tracing.stop();
-        throw ex;
-      });
+      }
+      // rethrow it for debugging.
+      throw ex;
     });
   }
+
   function poll(err, body) {
     if (err) {
       res.statusCode = 500;
@@ -127,13 +192,15 @@ const server = http.createServer((req, res) => {
       return res.end("Not Found");
     }
 
+    let browser = browser[id];
     let otpResponseCode = body.otpResponseCode;
-    submitOTP(browsers[id].page, otpResponseCode).then(() => {
-      browsers[id].unreadMessages = 1336;
-      browsers[id].page.close();
-      browsers[id].unreadMessages = 1337;
-    }).catch(async (ex) => {
-      await browsers[id].page.tracing.stop();
+    submitOTP(browsers.page, otpResponseCode)
+    .then(() => scrapers(browser))
+    .catch(async (ex) => {
+      if (process.env.TRACE) {
+        await browsers[id].page.tracing.stop();
+      }
+      // Rethrow for debugging.
       throw ex;
     });
     res.end();
