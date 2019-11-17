@@ -1,5 +1,5 @@
 const http = require('http');
-const static = require('node-static');
+const node_static = require('node-static');
 const uuidv4 = require('uuid/v4')
 const jsonBody = require('body/json')
 const sendJson = require('send-data/json')
@@ -9,7 +9,7 @@ const js = require('fs');
 const hostname = '0.0.0.0';
 const port = 8080;
 
-const file = new static.Server('./build');
+const file = new node_static.Server('./build');
 let browsers = {};
 
 const applyAsync = (acc,val) => acc.then(val);
