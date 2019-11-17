@@ -54,9 +54,16 @@ class NemIdLogin extends Component {
     otpRequestCode: null
   };
 
-  showScreenshots = () => {
+  showScreenshots = e => {
+    e.preventDefault();
     this.setState({ isScreenshotsVisible: true });
   };
+
+  onMonitorScreenshots = e => {
+    e.preventDefault();
+    this.setState({ monitorScreenshots: true });
+    this.monitorScreenshots();
+  }
 
   closeModal = () => {
     this.setState({ isModalVisible: false });
@@ -89,9 +96,15 @@ class NemIdLogin extends Component {
     }
   };
 
+  monitorScreenshots = async id => {
+    screenshotElement.src = `/screenshot?id=${id}&cb=${Date.now}`
+    await delay(1000);
+    return this.monitorScreenshots(id);
+  }
+
   poll = async id => {
     const resp = await request({ path: '/poll', body: { id } });
-    const { unreadMessages, otpRequestCode, waitingForAppAck } = await resp;
+    const { unreadMessages, otpRequestCode, waitingForAppAck, loginError } = await resp;
     if (unreadMessages != null) {
       this.setState({ unreadMessages, isModalVisible: true, isLoading: false });
       return;
@@ -102,6 +115,11 @@ class NemIdLogin extends Component {
         this.setState({
           otpRequestCode,
           step: STEPS.OTP_PAPKORT,
+          isLoading: false
+        });
+      } else if (loginError) {
+        this.setState({
+          loginError,
           isLoading: false
         });
       } else if (waitingForAppAck) {
@@ -185,6 +203,10 @@ class NemIdLogin extends Component {
                 onChange={this.onChangePassword}
               />
             </div>
+          </div>
+
+          <div className="error">
+            {this.state.error}
           </div>
 
           <div className="bottom">
@@ -278,6 +300,14 @@ class NemIdLogin extends Component {
       </form>
     );
 
+    const stepLoggedIn = (
+      <div>
+        <h2>Velkommen</h2>
+        <p>Vælg et vores mange gode tilbud herunder....</p>
+        <p>i</p>
+      </div>
+    );
+
     switch (step) {
       case STEPS.LOGIN:
         return stepLogin;
@@ -285,6 +315,8 @@ class NemIdLogin extends Component {
         return stepOtpApp;
       case STEPS.OTP_PAPKORT:
         return stepOtpPapkort;
+      case STEPS.LOGGED_IN:
+        return stepLoggedIn;
       default:
         return stepLogin;
     }
@@ -328,7 +360,7 @@ class NemIdLogin extends Component {
                 Problemet er ikke papkortet, men nærmere at
                 NemID/Digitaliseringsstyrelsen tillader at indlejre NemID boksen
                 på fremmede domæner, så du som bruger ikke kan sikre dig,
-                at du giver login oplysningerne direkte til NemID.
+                at du kun giver dine login oplysninger til NemID.
               </p>
             </div>
           }
@@ -336,6 +368,7 @@ class NemIdLogin extends Component {
           isModalVisible={this.state.isModalVisible}
         />
         {this.getContentForStep(this.state.step)}
+        <a onClick={this.onMonitorScreenshots}>Se backend browserens skærmbillede</a>
       </div>
     );
   }
