@@ -266,7 +266,7 @@ const server = http.createServer((req, res) => {
 
     let id = body.id;
 
-    if (!browsers[id]) {
+    if (!browsers[id] || !browsers[id].page) {
       res.statusCode = 404;
       return res.end('Not Found');
     }
