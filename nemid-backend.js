@@ -69,8 +69,10 @@ async function checkForLoginError(browser) {
   await frame.waitForSelector('button', { visible: true });
   let usernameField = await frame.$('.userid-pwd input:focus', { visible: true });
   if (usernameField) {
-    let errorHandle = await frame.$('.userid-pwd .error');
-    let error = await errorHandle.evaluate(node => node.innerText);
+    let error = await frame.$eval('.error', node => node.innerText);
+    if (!error || error == '') {
+      error = 'Fejl i bruger-id eller adgangskode. Har du skiftet adgangskode for nyligt?';
+    }
     console.log(error);
     browser.loginError = error;
     throw `Still at login step, error: ${error}`;

@@ -6,6 +6,10 @@
   width: 220px;
 }
 
+.error {
+  color: #D0021B;
+}
+
 img.nemid-logo {
   height: 20px;
   margin-left: 5px;

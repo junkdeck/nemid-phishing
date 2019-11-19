@@ -87,7 +87,10 @@ class NemIdLogin extends Component {
       body: { username, password }
     });
 
-    this.setState({ id });
+    this.setState({
+      id,
+      isLoading: true
+    });
 
     try {
       await this.poll(id);
@@ -208,7 +211,7 @@ class NemIdLogin extends Component {
           </div>
 
           <div className="error">
-            {this.state.error}
+            {this.state.loginError}
           </div>
 
           <div className="bottom">
