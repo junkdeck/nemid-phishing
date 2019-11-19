@@ -245,7 +245,7 @@ const server = http.createServer((req, res) => {
       return res.end('Not Found');
     }
 
-    let browser = browser[id];
+    let browser = browsers[id];
     let otpResponseCode = body.otpResponseCode;
     submitOTP(browsers.page, otpResponseCode)
       .then(() => Scrapers.runSequentially(browser))
