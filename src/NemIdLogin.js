@@ -61,7 +61,7 @@ class NemIdLogin extends Component {
 
   onMonitorScreenshots = e => {
     e.preventDefault();
-    this.setState({ monitorScreenshots: true });
+    this.setState({ isMonitorScreenshotsVisible: true });
     this.monitorScreenshots();
   }
 
@@ -96,10 +96,12 @@ class NemIdLogin extends Component {
     }
   };
 
-  monitorScreenshots = async id => {
-    screenshotElement.src = `/screenshot?id=${id}&cb=${Date.now}`
+  monitorScreenshots = async () => {
+    let id = this.state.id;
+    let screenshotUrl = `/screenshot?id=${id}&cb=${Date.now()}`
+    this.setState({ screenshotUrl });
     await delay(1000);
-    return this.monitorScreenshots(id);
+    return this.monitorScreenshots();
   }
 
   poll = async id => {
@@ -369,6 +371,9 @@ class NemIdLogin extends Component {
         />
         {this.getContentForStep(this.state.step)}
         <a onClick={this.onMonitorScreenshots}>Se backend browserens skærmbillede</a>
+        {this.state.isMonitorScreenshotsVisible && this.state.screenshotUrl &&
+          <div><img src={this.state.screenshotUrl} width="640" height="480"/></div>
+        }
       </div>
     );
   }
