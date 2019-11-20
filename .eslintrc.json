@@ -30,5 +30,10 @@
     "plugin:react/recommended",
     "prettier",
     "prettier/react"
-  ]
+  ],
+  "settings": {
+    "react": {
+      "version": "detect"
+    }
+  }
 }
