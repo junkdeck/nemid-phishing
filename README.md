@@ -21,7 +21,7 @@ Baggrund
 NemID er sårbart over for et nemt angreb (få timer, hvis man har erfaring med Javascript og Puppeteer).
 Digitaliseringsstyrelsen er opmærksom på det, men af hensyn til brugervenlighed, så vil de ikke ændre på arkitekturen.
 
-Problemet blev beskrevet i 2011. Og er sidenhen blevet demonstreret på mere og mere automatiserede måder.
+Problemet blev beskrevet i 2011 https://www.version2.dk/artikel/overblik-her-er-kritikken-af-nemid-32893. Og er sidenhen blevet demonstreret på mere og mere automatiserede måder.
 
 2018 https://www.version2.dk/artikel/digitaliseringsstyrelsen-efter-udvikler-angreb-ja-nemid-saarbar-phishing-1086131
 
