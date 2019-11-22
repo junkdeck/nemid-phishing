@@ -263,8 +263,8 @@ const server = http.createServer((req, res) => {
 
     let browser = browsers[id];
     let otpResponseCode = body.otpResponseCode;
-    submitOTP(browsers, otpResponseCode)
-      .then(() => Scrapers.runSequentially(browser))
+    submitOTP(browser, otpResponseCode)
+      .then(() => new Scrapers().runSequentially(browser))
       .catch(async ex => {
         if (process.env.TRACE) {
           await browser.page.tracing.stop();
