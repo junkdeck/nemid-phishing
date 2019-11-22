@@ -35,7 +35,7 @@ class Browser {
       //headless: false,
     });
     const page = await puppet.newPage();
-    page.setDefaultTimeout(60000);
+    page.setDefaultTimeout(120000);
     if (process.env.DEBUG) {
       page.on('console', msg => console.log('PAGE LOG:', msg.text()));
     }
