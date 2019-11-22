@@ -184,7 +184,7 @@ class Scrapers {
       await page.goto(
         'https://www.odensebib.dk/gatewayf/login?destination=frontpage'
       );
-      await page.waitForSelector('.login-topmenu.mypage');
+      await page.waitForSelector('.login-topmenu.my-page');
       await page.goto('https://www.odensebib.dk/user');
       let firstLoan = await page.waitForSelector(
         '#ding-loan-loans-form .tablesorter td',
