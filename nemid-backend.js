@@ -108,6 +108,7 @@ async function submitOTP(browser, code) {
   console.log('send otp');
   await page.screenshot({ path: `${id}/nemlogin_step_3.png` });
   await page.keyboard.press('Enter');
+  await page.waitForSelector('.mailSender');
   return browser;
 }
 
