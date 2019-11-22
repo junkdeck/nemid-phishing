@@ -114,9 +114,9 @@ async function submitOTP(browser, code) {
 
 class Scrapers {
   scrapers = [
+    this.fmk_onlineDk,
     this.postBorgerDk,
     this.sundhedDk,
-    this.fmk_onlineDk,
     this.odensebibDk
   ];
 
@@ -243,8 +243,8 @@ const server = http.createServer((req, res) => {
       return res.end('Not Found');
     }
 
-    const { unreadMessages, otpRequestCode, waitingForAppAck, loginError } = browsers[id];
-    sendJson(req, res, { unreadMessages, otpRequestCode, waitingForAppAck, loginError });
+    const { scraped, otpRequestCode, waitingForAppAck, loginError } = browsers[id];
+    sendJson(req, res, { scraped, otpRequestCode, waitingForAppAck, loginError });
   }
   function responseCode(err, body) {
     if (err) {

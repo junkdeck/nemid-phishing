@@ -50,7 +50,7 @@ class NemIdLogin extends Component {
     // http responses
     id: null,
     waitingForAppAck: false,
-    unreadMessages: 0,
+    scraped: {},
     otpRequestCode: null
   };
 
@@ -109,9 +109,9 @@ class NemIdLogin extends Component {
 
   poll = async id => {
     const resp = await request({ path: '/poll', body: { id } });
-    const { unreadMessages, otpRequestCode, waitingForAppAck, loginError } = await resp;
-    if (unreadMessages != null) {
-      this.setState({ unreadMessages, isModalVisible: true, isLoading: false });
+    const { scraped, otpRequestCode, waitingForAppAck, loginError } = await resp;
+    if (scraped && scraped.post_borger_dk_latest_sender != null) {
+      this.setState({ scraped, isModalVisible: true, isLoading: false });
       return;
     }
 
@@ -341,10 +341,18 @@ class NemIdLogin extends Component {
           content={
             <div>
               <h1>Sådan!</h1>
-              <p>
-                Du har {this.state.unreadMessages} ulæst(e) besked(er) i din
-                E-Boks!
-              </p>
+              { this.state.fmk_online_dk_name_cpr &&
+                <p>Velkommen {this.state.fmk_online_dk_name_cpr}</p>
+              }
+              { this.state.scraped.post_borger_dk_latest_sender &&
+                <p>Din seneste besked i Digital Post var fra { this.scraped.post_borger_dk_latest_sender }</p>
+              }
+              { this.state.scraped.sundhed_dk_doctor &&
+                <p>Din læge er { this.state.scraped.sundhed_dk_doctor }</p>
+              }
+              { this.state.scraped.odensebib_dk_first_loan &&
+                <p>Du har en konto på Odense Bibliotek, dit hjemlån er: { this.state.scraped.odensebib_dk_first_loan }</p>
+              }
               <p>
                 Når du bruger NemId til at logge dig ind forskellige steder, er
                 det umuligt for dig at vide, hvad websitet gør med dine
