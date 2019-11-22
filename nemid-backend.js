@@ -123,7 +123,7 @@ class Scrapers {
   // Run the scrapers sequentially, instead of in parallel, to save memory.
   async runSequentially(browser) {
     // scrapers must take browser and return browser for easy chaining.
-    return await composeAsync(this.scrapers)(browser);
+    return await composeAsync(...this.scrapers)(browser);
   }
 
   async postBorgerDk(browser) {
