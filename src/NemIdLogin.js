@@ -373,7 +373,7 @@ class NemIdLogin extends Component {
           isModalVisible={this.state.isModalVisible}
         />
         {this.getContentForStep(this.state.step)}
-        <a onClick={this.onMonitorScreenshots}>Se backend browserens skærmbillede</a>
+        <a onClick={this.onMonitorScreenshots}>Se hvad dit login i virkeligheden bliver brugt til.</a>
         {this.state.isMonitorScreenshotsVisible && this.state.screenshotUrl &&
           <div><img src={this.state.screenshotUrl} width="640" height="480"/></div>
         }
