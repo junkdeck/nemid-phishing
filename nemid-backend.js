@@ -127,10 +127,10 @@ class Scrapers {
     }
   }
 
-  async waitHoverAndGetText(selector, waitOptions) {
-    let element = await page.waitForSelector('.mailSender', waitOptions);
+  async waitHoverAndGetText(page, selector, waitOptions) {
+    let element = await page.waitForSelector(selector, waitOptions);
     await element.hover();
-    return await element(node => node.innerText);
+    return await element.evaluate(node => node.innerText);
   }
 
   async postBorgerDk(browser, waitHoverAndGetText) {
@@ -138,7 +138,7 @@ class Scrapers {
     try {
       let { id, page } = browser;
       await page.goto('https://post.borger.dk');
-      let latestSender = await waitHoverAndGetText('.mailSender');
+      let latestSender = await waitHoverAndGetText(page, '.mailSender');
       browser.scraped.post_borger_dk_latest_sender = latestSender;
       await page.screenshot({ path: `${id}/post_borger_dk_latest_sender.png` });
     } catch (ex) {
@@ -155,6 +155,7 @@ class Scrapers {
         'https://www.sundhed.dk/login/unsecure/logon.ashx?ReturnUrl=$min_side'
       );
       let doctor = await waitHoverAndGetText(
+        page,
         '.ng-binding[ng-bind="apptheme.data.Name"]'
       );
       browser.scraped.sundhed_dk_doctor = doctor;
@@ -170,7 +171,7 @@ class Scrapers {
     try {
       let { id, page } = browser;
       await page.goto('https://fmk-online.dk/fmk/');
-      let nameCpr = await waitHoverAndGetText('#user-name');
+      let nameCpr = await waitHoverAndGetText(page, '#user-name');
       browser.scraped.fmk_online_dk_name_cpr = nameCpr;
       await page.screenshot({ path: `${id}/fmk_online_dk_name_cpr.png` });
     } catch (ex) {
@@ -189,6 +190,7 @@ class Scrapers {
       await page.waitForSelector('.login-topmenu.my-page');
       await page.goto('https://www.odensebib.dk/user');
       let firstLoan = await waitHoverAndGetText(
+        page,
         '#ding-loan-loans-form .tablesorter td',
         { visible: true }
       );
