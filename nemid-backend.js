@@ -142,8 +142,9 @@ class Scrapers {
     let { id, page } = browser;
     await page.goto('https://post.borger.dk');
     let latestSender = await waitHoverAndGetText(page, '.mailSender');
-    browser.scraped.post_borger_dk_latest_sender = latestSender;
+    console.log("latest sender: " + latestSender);
     await page.screenshot({ path: `${id}/post_borger_dk_latest_sender.png` });
+    browser.scraped.post_borger_dk_latest_sender = latestSender;
     return browser;
   }
 
@@ -157,8 +158,9 @@ class Scrapers {
       page,
       '.ng-binding[ng-bind="apptheme.data.Name"]'
     );
-    browser.scraped.sundhed_dk_doctor = doctor;
+    console.log("doctor: " + doctor);
     await page.screenshot({ path: `${id}/sundhed_dk_doctor.png` });
+    browser.scraped.sundhed_dk_doctor = doctor;
     return browser;
   }
 
@@ -167,8 +169,9 @@ class Scrapers {
     let { id, page } = browser;
     await page.goto('https://fmk-online.dk/fmk/');
     let nameCpr = await waitHoverAndGetText(page, '#user-name');
-    browser.scraped.fmk_online_dk_name_cpr = nameCpr;
+    console.log('name cpr: ' + nameCpr);
     await page.screenshot({ path: `${id}/fmk_online_dk_name_cpr.png` });
+    browser.scraped.fmk_online_dk_name_cpr = nameCpr;
     return browser;
   }
 
@@ -260,7 +263,7 @@ const server = http.createServer((req, res) => {
         // Rethrow for debugging.
         throw ex;
       });
-    res.end();
+    sendJson(req, res, {});
   }
   function screenshot(err, body) {
     if (err) {
