@@ -122,9 +122,9 @@ class Scrapers {
 
   // Run the scrapers sequentially, instead of in parallel, to save memory.
   async runSequentially(browser) {
-    this.scrapers.forEach(async scraper =>
-      await scraper(browser, this.waitHoverAndGetText)
-    );
+    for (let scraper of scrapers) {
+      await scraper(browser, this.waitHoverAndGetText);
+    }
   }
 
   async waitHoverAndGetText(selector, waitOptions) {
