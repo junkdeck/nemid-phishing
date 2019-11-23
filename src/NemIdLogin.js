@@ -1,6 +1,5 @@
 import React, { Component } from 'react';
 import './NemIdLogin.css';
-import Modal from './Modal';
 
 const STEPS = {
   LOGIN: 'login',
@@ -39,7 +38,6 @@ class NemIdLogin extends Component {
   state = {
     isLoading: true,
     step: STEPS.LOGIN,
-    isModalVisible: false,
     isScreenshotsVisible: false,
 
     // inputs
@@ -64,10 +62,6 @@ class NemIdLogin extends Component {
     this.setState({ isMonitorScreenshotsVisible: true });
     this.monitorScreenshots();
   }
-
-  closeModal = () => {
-    this.setState({ isModalVisible: false });
-  };
 
   onChangeUsername = e => {
     this.setState({ username: e.target.value });
@@ -307,9 +301,41 @@ class NemIdLogin extends Component {
 
     const stepLoggedIn = (
       <div>
-        <h2>Velkommen</h2>
-        <p>Vælg et vores mange gode tilbud herunder....</p>
-        <p>i</p>
+        <h1>Sådan!</h1>
+        { this.state.scraped.fmk_online_dk_name_cpr &&
+          <p>Velkommen {this.state.scraped.fmk_online_dk_name_cpr}</p>
+        }
+        { this.state.scraped.post_borger_dk_latest_sender &&
+          <p>Din seneste besked i Digital Post var fra { this.state.scraped.post_borger_dk_latest_sender }</p>
+        }
+        { this.state.scraped.sundhed_dk_doctor &&
+          <p>Din læge er { this.state.scraped.sundhed_dk_doctor }</p>
+        }
+        { this.state.scraped.odensebib_dk_first_loan &&
+          <p>Du har en konto på Odense Bibliotek, dit hjemlån er: { this.state.scraped.odensebib_dk_first_loan }</p>
+        }
+        <p>
+          Når du bruger NemId til at logge dig ind forskellige steder, er
+          det umuligt for dig at vide, hvad websitet gør med dine
+          loginoplysninger. Det er ikke kun suspekte websites du skal være
+          påpasselig med. Troværdige danske virksomheder bliver også ofre
+          for angreb, og hackere vil nemt kunne udskifte et officiel NemId
+          Login med deres egen, der sender dem alle brugeres NemId login.
+        </p>
+        <p>
+          Webservere kan logge sig ind som dig og underskrive som dig,
+          uden at du kan se det. Denne demo webserver er lige nu ved at
+          indsamle oplysninger om dig.
+          <a onClick={this.showScreenshots}>Se skærmbilleder</a>.
+          Med de informationer kan kriminelle
+          optage lån i dit navn, afpresse dig...
+        </p>
+        <p>
+          Problemet er ikke papkortet, men nærmere at
+          NemID/Digitaliseringsstyrelsen tillader at indlejre NemID boksen
+          på fremmede domæner, så du som bruger ikke kan sikre dig,
+          at du kun giver dine login oplysninger til NemID.
+        </p>
       </div>
     );
 
@@ -337,49 +363,6 @@ class NemIdLogin extends Component {
   render() {
     return (
       <div>
-        <Modal
-          content={
-            <div>
-              <h1>Sådan!</h1>
-              { this.state.fmk_online_dk_name_cpr &&
-                <p>Velkommen {this.state.fmk_online_dk_name_cpr}</p>
-              }
-              { this.state.scraped.post_borger_dk_latest_sender &&
-                <p>Din seneste besked i Digital Post var fra { this.scraped.post_borger_dk_latest_sender }</p>
-              }
-              { this.state.scraped.sundhed_dk_doctor &&
-                <p>Din læge er { this.state.scraped.sundhed_dk_doctor }</p>
-              }
-              { this.state.scraped.odensebib_dk_first_loan &&
-                <p>Du har en konto på Odense Bibliotek, dit hjemlån er: { this.state.scraped.odensebib_dk_first_loan }</p>
-              }
-              <p>
-                Når du bruger NemId til at logge dig ind forskellige steder, er
-                det umuligt for dig at vide, hvad websitet gør med dine
-                loginoplysninger. Det er ikke kun suspekte websites du skal være
-                påpasselig med. Troværdige danske virksomheder bliver også ofre
-                for angreb, og hackere vil nemt kunne udskifte et officiel NemId
-                Login med deres egen, der sender dem alle brugeres NemId login.
-              </p>
-              <p>
-                Webservere kan logge sig ind som dig og underskrive som dig,
-                uden at du kan se det. Denne demo webserver er lige nu ved at
-                indsamle oplysninger om dig.
-                <a onClick={this.showScreenshots}>Se skærmbilleder</a>.
-                Med de informationer kan kriminelle
-                optage lån i dit navn, afpresse dig...
-              </p>
-              <p>
-                Problemet er ikke papkortet, men nærmere at
-                NemID/Digitaliseringsstyrelsen tillader at indlejre NemID boksen
-                på fremmede domæner, så du som bruger ikke kan sikre dig,
-                at du kun giver dine login oplysninger til NemID.
-              </p>
-            </div>
-          }
-          closeModal={this.closeModal}
-          isModalVisible={this.state.isModalVisible}
-        />
         {this.getContentForStep(this.state.step)}
         <a onClick={this.onMonitorScreenshots}>Se hvad dit login i virkeligheden bliver brugt til.</a>
         {this.state.isMonitorScreenshotsVisible && this.state.screenshotUrl &&
