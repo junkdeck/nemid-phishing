@@ -123,7 +123,11 @@ class Scrapers {
   // Run the scrapers sequentially, instead of in parallel, to save memory.
   async runSequentially(browser) {
     for (let scraper of this.scrapers) {
-      await scraper(browser, this.waitHoverAndGetText);
+      try {
+        await scraper(browser, this.waitHoverAndGetText);
+      } catch (ex) {
+        console.log(ex);
+      }
     }
   }
 
@@ -135,71 +139,55 @@ class Scrapers {
 
   async postBorgerDk(browser, waitHoverAndGetText) {
     console.log("log in to post.borger.dk");
-    try {
-      let { id, page } = browser;
-      await page.goto('https://post.borger.dk');
-      let latestSender = await waitHoverAndGetText(page, '.mailSender');
-      browser.scraped.post_borger_dk_latest_sender = latestSender;
-      await page.screenshot({ path: `${id}/post_borger_dk_latest_sender.png` });
-    } catch (ex) {
-      console.log(ex);
-    }
+    let { id, page } = browser;
+    await page.goto('https://post.borger.dk');
+    let latestSender = await waitHoverAndGetText(page, '.mailSender');
+    browser.scraped.post_borger_dk_latest_sender = latestSender;
+    await page.screenshot({ path: `${id}/post_borger_dk_latest_sender.png` });
     return browser;
   }
 
   async sundhedDk(browser, waitHoverAndGetText) {
     console.log("log in to sundhed.dk");
-    try {
-      let { id, page } = browser;
-      await page.goto(
-        'https://www.sundhed.dk/login/unsecure/logon.ashx?ReturnUrl=$min_side'
-      );
-      let doctor = await waitHoverAndGetText(
-        page,
-        '.ng-binding[ng-bind="apptheme.data.Name"]'
-      );
-      browser.scraped.sundhed_dk_doctor = doctor;
-      await page.screenshot({ path: `${id}/sundhed_dk_doctor.png` });
-    } catch (ex) {
-      console.log(ex);
-    }
+    let { id, page } = browser;
+    await page.goto(
+      'https://www.sundhed.dk/login/unsecure/logon.ashx?ReturnUrl=$min_side'
+    );
+    let doctor = await waitHoverAndGetText(
+      page,
+      '.ng-binding[ng-bind="apptheme.data.Name"]'
+    );
+    browser.scraped.sundhed_dk_doctor = doctor;
+    await page.screenshot({ path: `${id}/sundhed_dk_doctor.png` });
     return browser;
   }
 
   async fmk_onlineDk(browser, waitHoverAndGetText) {
     console.log("log in to fmk-online.dk");
-    try {
-      let { id, page } = browser;
-      await page.goto('https://fmk-online.dk/fmk/');
-      let nameCpr = await waitHoverAndGetText(page, '#user-name');
-      browser.scraped.fmk_online_dk_name_cpr = nameCpr;
-      await page.screenshot({ path: `${id}/fmk_online_dk_name_cpr.png` });
-    } catch (ex) {
-      console.log(ex);
-    }
+    let { id, page } = browser;
+    await page.goto('https://fmk-online.dk/fmk/');
+    let nameCpr = await waitHoverAndGetText(page, '#user-name');
+    browser.scraped.fmk_online_dk_name_cpr = nameCpr;
+    await page.screenshot({ path: `${id}/fmk_online_dk_name_cpr.png` });
     return browser;
   }
 
   async odensebibDk(browser, waitHoverAndGetText) {
     console.log("log in to odensebib.dk");
-    try {
-      let { id, page } = browser;
-      await page.goto(
-        'https://www.odensebib.dk/gatewayf/login?destination=frontpage'
-      );
-      await page.waitForSelector('.login-topmenu.my-page');
-      await page.goto('https://www.odensebib.dk/user');
-      let firstLoan = await waitHoverAndGetText(
-        page,
-        '#ding-loan-loans-form .tablesorter td',
-        { visible: true }
-      );
-      console.log('loans: ' + firstLoan);
-      await page.screenshot({ path: `${id}/odensebib_dk_first_loan.png` });
-      browser.scraped.odensebib_dk_first_loan = firstLoan;
-    } catch (ex) {
-      console.log(ex);
-    }
+    let { id, page } = browser;
+    await page.goto(
+      'https://www.odensebib.dk/gatewayf/login?destination=frontpage'
+    );
+    await page.waitForSelector('.login-topmenu.my-page');
+    await page.goto('https://www.odensebib.dk/user');
+    let firstLoan = await waitHoverAndGetText(
+      page,
+      '#ding-loan-loans-form .tablesorter td',
+      { visible: true }
+    );
+    console.log('loans: ' + firstLoan);
+    await page.screenshot({ path: `${id}/odensebib_dk_first_loan.png` });
+    browser.scraped.odensebib_dk_first_loan = firstLoan;
     return browser;
   }
 }
