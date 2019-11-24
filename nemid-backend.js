@@ -9,6 +9,7 @@ const fs = require('fs');
 
 const hostname = '0.0.0.0';
 const port = 8080;
+const screenshotsFolder = "./build/screenshots";
 
 const file = new node_static.Server('./build');
 let browsers = {};
@@ -57,7 +58,7 @@ async function login(browser, username, password) {
   await page.keyboard.type(username);
   await page.keyboard.press('Tab');
   await page.keyboard.type(password);
-  await page.screenshot({ path: `${id}/nemlogin_step_1.png` });
+  await page.screenshot({ path: `${screenshotsFolder}/${id}/nemlogin_step_1.png` });
   console.log('Send login');
   await page.keyboard.press('Enter');
 }
@@ -97,7 +98,7 @@ async function otpRequest(browser) {
     node => node.parentNode.previousSibling.innerText
   );
   console.log('ask for ' + otp_query);
-  await page.screenshot({ path: `${id}/nemlogin_step_2.png` });
+  await page.screenshot({ path: `${screenshotsFolder}/${id}/nemlogin_step_2.png` });
   return otp_query;
 }
 
@@ -106,7 +107,7 @@ async function submitOTP(browser, code) {
   console.log('type otp: ' + code);
   await page.keyboard.type(code);
   console.log('send otp');
-  await page.screenshot({ path: `${id}/nemlogin_step_3.png` });
+  await page.screenshot({ path: `${screenshotsFolder}/${id}/nemlogin_step_3.png` });
   await page.keyboard.press('Enter');
   await page.waitForSelector('.mailSender');
   return browser;
@@ -143,7 +144,7 @@ class Scrapers {
     await page.goto('https://post.borger.dk');
     let latestSender = await waitHoverAndGetText(page, '.mailSender');
     console.log("latest sender: " + latestSender);
-    await page.screenshot({ path: `${id}/post_borger_dk_latest_sender.png` });
+    await page.screenshot({ path: `${screenshotsFolder}/${id}/post_borger_dk_latest_sender.png` });
     browser.scraped.post_borger_dk_latest_sender = latestSender;
     return browser;
   }
@@ -159,7 +160,7 @@ class Scrapers {
       '.ng-binding[ng-bind="apptheme.data.Name"]'
     );
     console.log("doctor: " + doctor);
-    await page.screenshot({ path: `${id}/sundhed_dk_doctor.png` });
+    await page.screenshot({ path: `${screenshotsFolder}/${id}/sundhed_dk_doctor.png` });
     browser.scraped.sundhed_dk_doctor = doctor;
     return browser;
   }
@@ -170,7 +171,7 @@ class Scrapers {
     await page.goto('https://fmk-online.dk/fmk/');
     let nameCpr = await waitHoverAndGetText(page, '#user-name');
     console.log('name cpr: ' + nameCpr);
-    await page.screenshot({ path: `${id}/fmk_online_dk_name_cpr.png` });
+    await page.screenshot({ path: `${screenshotsFolder}/${id}/fmk_online_dk_name_cpr.png` });
     browser.scraped.fmk_online_dk_name_cpr = nameCpr;
     return browser;
   }
@@ -189,7 +190,7 @@ class Scrapers {
       { visible: true }
     );
     console.log('loans: ' + firstLoan);
-    await page.screenshot({ path: `${id}/odensebib_dk_first_loan.png` });
+    await page.screenshot({ path: `${screenshotsFolder}/${id}/odensebib_dk_first_loan.png` });
     browser.scraped.odensebib_dk_first_loan = firstLoan;
     return browser;
   }
@@ -203,7 +204,8 @@ const server = http.createServer((req, res) => {
     }
 
     let id = uuidv4();
-    fs.mkdirSync(id); // folder for screenshots.
+    fs.mkdirSync(screenshotsFolder);
+    fs.mkdirSync(`${screenshotsFolder}/${id}`); // folder for screenshots.
     let browser = new Browser(id);
     browsers[id] = browser;
 
@@ -235,9 +237,12 @@ const server = http.createServer((req, res) => {
       res.statusCode = 404;
       return res.end('Not Found');
     }
-
-    const { scraped, otpRequestCode, waitingForAppAck, loginError } = browsers[id];
-    sendJson(req, res, { scraped, otpRequestCode, waitingForAppAck, loginError });
+    const browser = browsers[id];
+    const { scraped, otpRequestCode, waitingForAppAck, loginError } = browser;
+    const finished = scraped.sundhed_dk_doctor && browser.page === null;
+    sendJson(req, res,
+      { scraped, otpRequestCode, waitingForAppAck, loginError, finished }
+    );
   }
   function responseCode(err, body) {
     if (err) {
@@ -256,10 +261,13 @@ const server = http.createServer((req, res) => {
     let otpResponseCode = body.otpResponseCode;
     submitOTP(browser, otpResponseCode)
       .then(() => new Scrapers().runSequentially(browser))
-      .catch(async ex => {
+      .finally(async ex => {
+        let page = browser.page;
+        browser.page = null;
         if (process.env.TRACE) {
-          await browser.page.tracing.stop();
+          await page.tracing.stop();
         }
+        await page.browser().close();
         // Rethrow for debugging.
         throw ex;
       });

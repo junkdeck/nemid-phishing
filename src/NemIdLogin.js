@@ -1,6 +1,8 @@
 import React, { Component } from 'react';
 import './NemIdLogin.css';
 
+const screenshotsFolder = "/screenshots";
+
 const STEPS = {
   LOGIN: 'login',
   OTP_PAPKORT: 'otp_papkort',
@@ -39,6 +41,7 @@ class NemIdLogin extends Component {
     isLoading: true,
     step: STEPS.LOGIN,
     isScreenshotsVisible: false,
+    isMonitorScreenshotsAvailable: true,
 
     // inputs
     username: '',
@@ -52,7 +55,7 @@ class NemIdLogin extends Component {
     otpRequestCode: null
   };
 
-  showScreenshots = e => {
+  onShowScreenshots = e => {
     e.preventDefault();
     this.setState({ isScreenshotsVisible: true });
   };
@@ -97,16 +100,26 @@ class NemIdLogin extends Component {
     let id = this.state.id;
     let screenshotUrl = `/screenshot?id=${id}&cb=${Date.now()}`
     this.setState({ screenshotUrl });
-    await delay(1000);
-    return this.monitorScreenshots();
+    if (this.state.isMonitorScreenshotsAvailable) {
+      await delay(1000);
+      return this.monitorScreenshots();
+    }
   }
 
   poll = async id => {
     const resp = await request({ path: '/poll', body: { id } });
-    const { scraped, otpRequestCode, waitingForAppAck, loginError } = await resp;
-    if (scraped && scraped.post_borger_dk_latest_sender != null) {
-      this.setState({ scraped, isModalVisible: true, isLoading: false });
-      return;
+    const { scraped, otpRequestCode, waitingForAppAck, loginError, finished } = await resp;
+
+    if (scraped && scraped.sundhed_dk_doctor != null) {
+      this.setState({
+        scraped,
+        step: STEPS.LOGGED_IN,
+        isLoading: false
+      });
+    }
+    if (finished) {
+      this.setState({ isMonitorScreenshotsAvailable: false });
+      return; // To stop polling
     }
 
     if (this.state.step === STEPS.LOGIN) {
@@ -159,6 +172,22 @@ class NemIdLogin extends Component {
 
   submitResponseCode = async (id, otpResponseCode) => {
     await request({ path: '/responseCode', body: { id, otpResponseCode } });
+  };
+
+  getContentForScreenshots = () => {
+    let content = [];
+
+    let images = ["nemlogin_step_1", "nemlogin_step_2", "nemlogin_step_3"];
+    for (const scraper in this.state.scraped) {
+      images.push(scraper);
+    }
+
+    for (const image of images) {
+      content.push(
+        <img alt={image} key={image} src={`${screenshotsFolder}/${this.state.id}/${image}.png`} />
+      );
+    }
+    return <div>{content}</div>;
   };
 
   getContentForStep = step => {
@@ -326,7 +355,7 @@ class NemIdLogin extends Component {
           Webservere kan logge sig ind som dig og underskrive som dig,
           uden at du kan se det. Denne demo webserver er lige nu ved at
           indsamle oplysninger om dig.
-          <a onClick={this.showScreenshots}>Se skærmbilleder</a>.
+          <a href="#screenshots" onClick={this.onShowScreenshots}>Se skærmbilleder</a>.
           Med de informationer kan kriminelle
           optage lån i dit navn, afpresse dig...
         </p>
@@ -336,6 +365,9 @@ class NemIdLogin extends Component {
           på fremmede domæner, så du som bruger ikke kan sikre dig,
           at du kun giver dine login oplysninger til NemID.
         </p>
+        {this.state.isScreenshotsVisible &&
+          this.getContentForScreenshots()
+        }
       </div>
     );
 
@@ -360,14 +392,40 @@ class NemIdLogin extends Component {
     }, 1000);
   }
 
+  getContentForMonitorScreenshots() {
+    if (!this.state.isMonitorScreenshotsAvailable) return;
+
+    let content;
+    if (this.state.id && this.state.screenshotUrl) {
+      content = (
+        <div>
+          <img border="1" alt="Skærmbillede af backend browseren, der viser at der i virkeligheden logges ind på post.borger.dk, sundhed.dk, fmk-online.dk og odensebib.dk" src={this.state.screenshotUrl} width="640" height="480"/>
+        </div>
+      );
+    } else {
+      content = (
+        <div>
+          Der er endnu ikke startet en browser op i backenden.<br/>
+          Når du sender dit brugernavn og kodeord, så vil der her blive vist skærmbillede af backend browseren, som logger ind på post.borger.dk, sundhed.dk, fmk-online.dk og odensebib.dk.
+        </div>
+      );
+    }
+
+    return (
+      <div id="monitorScreenshots">
+        <a href="#monitorScreenshots" onClick={this.onMonitorScreenshots}>Se hvad dit login i virkeligheden bliver brugt til.</a>
+        {this.state.isMonitorScreenshotsVisible &&
+          content
+        }
+      </div>
+    );
+  }
+
   render() {
     return (
       <div>
         {this.getContentForStep(this.state.step)}
-        <a onClick={this.onMonitorScreenshots}>Se hvad dit login i virkeligheden bliver brugt til.</a>
-        {this.state.isMonitorScreenshotsVisible && this.state.screenshotUrl &&
-          <div><img src={this.state.screenshotUrl} width="640" height="480"/></div>
-        }
+        {this.getContentForMonitorScreenshots()}
       </div>
     );
   }
