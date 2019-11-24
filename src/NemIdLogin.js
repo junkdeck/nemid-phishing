@@ -56,12 +56,10 @@ class NemIdLogin extends Component {
   };
 
   onShowScreenshots = e => {
-    e.preventDefault();
     this.setState({ isScreenshotsVisible: true });
   };
 
   onMonitorScreenshots = e => {
-    e.preventDefault();
     this.setState({ isMonitorScreenshotsVisible: true });
     this.monitorScreenshots();
   }
@@ -187,7 +185,7 @@ class NemIdLogin extends Component {
         <img alt={image} key={image} src={`${screenshotsFolder}/${this.state.id}/${image}.png`} />
       );
     }
-    return <div>{content}</div>;
+    return <div id="screenshots">{content}</div>;
   };
 
   getContentForStep = step => {
