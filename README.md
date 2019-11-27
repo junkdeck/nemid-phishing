@@ -6,15 +6,16 @@ For at presse styrelsen til at reagere og beskytte os alle, gør koden her, det 
 
 Hvordan
 -------------
-Installér [git](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git) og [Docker](https://docs.docker.com/install/).
+Installér [git](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git) og [NodeJS](https://nodejs.org/).
 Kør dernæst følgende kommandoer i en kommando-prompt.
 ```
+npm install -g yarn
 git clone https://github.com/runephilosof/nemid-phishing.git
 cd nemid-phishing
-docker build -t nemid-phishing .
-docker run --rm --init -p 127.0.0.1:8080:8080 nemid-phishing
+yarn install
+node nemid-backend.js
 ```
-Åben din browser på `http://localhost:8080`.
+Åbn din browser på `http://localhost:8080`.
 
 Baggrund
 ---------------
