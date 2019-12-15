@@ -13,7 +13,8 @@ npm install -g yarn
 git clone https://github.com/runephilosof/nemid-phishing.git
 cd nemid-phishing
 yarn install
-node nemid-backend.js
+yarn build
+yarn backend
 ```
 Åbn din browser på `http://localhost:8080`.
 
