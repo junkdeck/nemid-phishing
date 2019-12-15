@@ -60,6 +60,7 @@ class NemIdLogin extends Component {
   };
 
   onMonitorScreenshots = e => {
+    e.preventDefault();
     this.setState({ isMonitorScreenshotsVisible: true });
     this.monitorScreenshots();
   }
