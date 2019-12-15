@@ -42,7 +42,7 @@ Så løsningen kunne være at kræve, at de private sider også benytter sig af 
 
 Bidrag til dette projekt
 ------------------------
-* Lav en video af at det bliver brugt.
+* Lav en bedre video af at det bliver brugt (huske at fjerne personfølsomme detaljer grundigt).
 * Gør frontenden pænere.
 * Hent og vis nøglekort nummer og antal resterende nøgler.
 * Ret andre forskelle i forhold til det rigtige NemID vindue.
